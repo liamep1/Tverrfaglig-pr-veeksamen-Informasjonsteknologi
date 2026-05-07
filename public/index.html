@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Brukere</title>
+</head>
+<body class="skjult">
+
+  <div class="topplinje">
+    <h1>Brukerbehandling</h1>
+    <div>
+      <span>Innlogget som: <strong id="brukernavnVisning"></strong> (<span id="rolleVisning"></span>)</span>
+      <button onclick="loggUt()">Logg ut</button>
+    </div>
+  </div>
+
+  <div class="innhold">
+
+    <!-- BARE SYNLIG FOR ADMIN -->
+    <div id="adminPanel" class="skjult">
+      <h2>Opprett ny bruker</h2>
+      <form id="brukerSkjema">
+        <input type="text" id="navn" placeholder="Navn" required>
+        <input type="text" id="email" placeholder="email" required>
+        <input type="password" id="passord" placeholder="Passord">
+
+        <select id="rolle_id">
+          <option value="1">IT-ansatt</option>
+          <option value="2">Elev</option>
+          <option value="3">Lærer</option>
+          <option value="4">Administrator</option>
+          <option value="5">Miljøarbeider</option>
+        </select>
+
+        <select id="klasse_id">
+          <option value="">Ingen klasse</option>
+          <option value="1">Klasse 1</option>
+          <option value="2">Klasse 2</option>
+          <option value="3">Klasse 3</option>
+          <option value="4">Klasse 4</option>
+          <option value="5">Klasse 5</option>
+        </select>
+
+        <button type="submit" id="sendKnapp">Opprett bruker</button>
+      </form>
+    </div>
+
+    <h2>Alle brukere</h2>
+    <div id="brukerListe"></div>
+
+   
+
+  </div>  
+
+  <script src="brukere.js"></script>
+</body>
+</html>

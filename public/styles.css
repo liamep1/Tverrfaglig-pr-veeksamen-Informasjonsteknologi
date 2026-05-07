@@ -1,0 +1,150 @@
+/* ===== GENERELT ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+body.skjult {
+  display: none;
+}
+
+/* ===== TOPPLINJE ===== */
+.topplinje {
+  background-color: #2c3e50;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.topplinje h1 {
+  font-size: 22px;
+}
+
+.topplinje span {
+  margin-right: 15px;
+  font-size: 14px;
+}
+
+.topplinje button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.topplinje button:hover {
+  background-color: #c0392b;
+}
+
+/* ===== INNHOLD ===== */
+.innhold {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+/* ===== ADMIN PANEL ===== */
+.skjult {
+  display: none;
+}
+
+#adminPanel {
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#adminPanel h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+/* ===== SKJEMA ===== */
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  background-color: #27ae60;
+}
+
+/* ===== BRUKERLISTE ===== */
+#brukerListe h2 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.brukerkort {
+  background-color: white;
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brukerkort p {
+  font-size: 15px;
+}
+
+.brukerkort button {
+  margin-left: 10px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  color: white;
+}
+
+.brukerkort button:first-of-type {
+  background-color: #3498db;
+}
+
+.brukerkort button:first-of-type:hover {
+  background-color: #2980b9;
+}
+
+.brukerkort button:last-of-type {
+  background-color: #e74c3c;
+}
+
+.brukerkort button:last-of-type:hover {
+  background-color: #c0392b;
+}
