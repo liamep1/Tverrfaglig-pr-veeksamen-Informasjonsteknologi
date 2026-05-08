@@ -1,11 +1,11 @@
-// ===== FYLL INN TESTKONTOER =====
+// fyller inn testbrukere så det går fort å teste innlogging
 function fyllAdministrator() {
-  document.getElementById("email").value = "liam@skole.no";
+  document.getElementById("email").value = "per.admin@skole.no";
   document.getElementById("passord").value = "1234";
 }
 
 function fyllLærer() {
-  document.getElementById("email").value = "Jo.bjørnar@skole.no";
+  document.getElementById("email").value = "kari.laerer@skole.no";
   document.getElementById("passord").value = "1234";
 }
 
@@ -24,10 +24,10 @@ function fyllMiljøarbeider() {
   document.getElementById("passord").value = "1234";
 }
 
-// ===== LOGG INN =====
 document.getElementById("loggInnSkjema").addEventListener("submit", (hendelse) => {
   hendelse.preventDefault();
 
+  // henter email og passord fra skjemaet
   const email = document.getElementById("email").value;
   const passord = document.getElementById("passord").value;
 
@@ -38,6 +38,7 @@ document.getElementById("loggInnSkjema").addEventListener("submit", (hendelse) =
   })
     .then(svar => svar.json())
     .then(data => {
+      // hvis innloggingen funker sendes brukeren videre
       if (data.vellykket) {
         window.location.href = "/index.html";
       } else {

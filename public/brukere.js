@@ -1,6 +1,6 @@
 let innloggetBruker = null;
 
-// ===== SJEKK OM BRUKER ER LOGGET INN =====
+// sjekker om brukeren er logget inn når siden åpnes
 function sjekkOmBrukerErLoggetInn() {
   fetch("/er-logget-inn")
     .then(svar => svar.json())
@@ -11,6 +11,7 @@ function sjekkOmBrukerErLoggetInn() {
         document.getElementById("brukernavnVisning").textContent = innloggetBruker.navn;
         document.getElementById("rolleVisning").textContent = innloggetBruker.rollenavn;
 
+        // admin får se skjemaet for å lage og endre brukere
         if (innloggetBruker.rolle_id === 4) {
           document.getElementById("adminPanel").classList.remove("skjult");
         }
@@ -22,9 +23,9 @@ function sjekkOmBrukerErLoggetInn() {
     });
 }
 
-// ===== HENT OG VIS ALLE BRUKERE =====
 let brukerSomRedigeres = null;
 
+// henter alle brukere og legger de inn på siden
 function hentOgVisAlleBrukere() {
   fetch("/brukere")
     .then(svar => svar.json())
@@ -35,6 +36,7 @@ function hentOgVisAlleBrukere() {
       brukere.forEach(bruker => {
         let knapper = "";
 
+        // rediger og slett knappene skal bare vises for admin
         if (innloggetBruker.rolle_id === 4) {
           knapper = `
             <button onclick="klargjørRedigering(${bruker.id})">Rediger</button>
@@ -52,10 +54,10 @@ function hentOgVisAlleBrukere() {
     });
 }
 
-// ===== KLARGJØR SKJEMA FOR REDIGERING =====
 function klargjørRedigering(id) {
   brukerSomRedigeres = id;
 
+  // henter en bruker og fyller inn skjemaet med dataen
   fetch(`/brukere/${id}`)
     .then(svar => svar.json())
     .then(bruker => {
@@ -67,22 +69,21 @@ function klargjørRedigering(id) {
     });
 }
 
-// ===== SLETT BRUKER =====
 function slettBruker(id) {
+  // sletter brukeren og oppdaterer listen etterpå
   fetch(`/brukere/${id}`, { method: "DELETE" })
     .then(() => hentOgVisAlleBrukere());
 }
 
-// ===== LOGG UT =====
 function loggUt() {
   fetch("/logg-ut", { method: "POST" })
     .then(() => window.location.href = "/login.html");
 }
 
-// ===== OPPRETT ELLER OPPDATER BRUKER =====
 document.getElementById("brukerSkjema").addEventListener("submit", (hendelse) => {
   hendelse.preventDefault();
 
+  // samler verdiene fra skjemaet
   const brukerData = {
     navn: document.getElementById("navn").value,
     email: document.getElementById("email").value,
@@ -94,15 +95,24 @@ document.getElementById("brukerSkjema").addEventListener("submit", (hendelse) =>
   const adresse = brukerSomRedigeres ? `/brukere/${brukerSomRedigeres}` : "/brukere";
   const metode = brukerSomRedigeres ? "PUT" : "POST";
 
+  // sender dataen til serveren
   fetch(adresse, {
     method: metode,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(brukerData)
   })
-    .then(() => {
+    .then(svar => svar.json().then(data => ({ ok: svar.ok, data })))
+    .then(resultat => {
+      // hvis serveren sender feil vises den under skjemaet
+      if (!resultat.ok) {
+        document.getElementById("skjemaFeil").textContent = resultat.data.feil;
+        return;
+      }
+
       hentOgVisAlleBrukere();
       document.getElementById("brukerSkjema").reset();
       document.getElementById("sendKnapp").textContent = "Opprett bruker";
+      document.getElementById("skjemaFeil").textContent = "";
       brukerSomRedigeres = null;
     });
 });

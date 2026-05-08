@@ -2,25 +2,45 @@ const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const økt = require("express-session");
 
-const tjener = express();
+const app = express();
 const database = new sqlite3.Database("database/eksamen.db");
 
-// ===== OPPSETT =====
-tjener.use(express.static("public"));
-tjener.use(express.json());
-tjener.use(express.urlencoded({ extended: true }));
+// gjør at serveren kan bruke filene i public mappen
+app.use(express.static("public"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-tjener.use(økt({
+// lager en økt så brukeren kan være logget inn
+app.use(økt({
   secret: "hemmelig-nøkkel",
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// ===== LOGG INN =====
-tjener.post("/login", (forespørsel, svar) => {
+function erAdmin(forespørsel) {
+  return forespørsel.session.innloggetBruker?.rolle_id === 4;
+}
+
+// enkel sjekk av data før det sendes inn i databasen
+function validerBruker(data, kreverPassord) {
+  const { navn, email, passord, rolle_id, klasse_id } = data;
+  const roller = ["1", "2", "3", "4", "8"];
+  const klasser = ["", "2", "3", "4", "5"];
+
+  if (!navn || !email || !rolle_id) return "Navn, email og rolle må fylles ut";
+  if (!email.includes("@")) return "Email må være gyldig";
+  if (kreverPassord && !passord) return "Passord må fylles ut";
+  if (!roller.includes(String(rolle_id))) return "Ugyldig rolle";
+  if (!klasser.includes(String(klasse_id ?? ""))) return "Ugyldig klasse";
+
+  return null;
+}
+
+app.post("/login", (forespørsel, svar) => {
   const { email, passord } = forespørsel.body;
 
+  // finner bruker med samme email og passord
   database.get(`
     SELECT Bruker.id, Bruker.navn, Bruker.email, Bruker.rolle_id, Rolle.navn AS rollenavn
     FROM Bruker
@@ -34,8 +54,8 @@ tjener.post("/login", (forespørsel, svar) => {
   });
 });
 
-// ===== SJEKK OM BRUKER ER LOGGET INN =====
-tjener.get("/er-logget-inn", (forespørsel, svar) => {
+app.get("/er-logget-inn", (forespørsel, svar) => {
+  // brukes av nettsiden for å se om brukeren kan være inne
   if (forespørsel.session.innloggetBruker) {
     svar.json({ loggetInn: true, bruker: forespørsel.session.innloggetBruker });
   } else {
@@ -43,14 +63,13 @@ tjener.get("/er-logget-inn", (forespørsel, svar) => {
   }
 });
 
-// ===== LOGG UT =====
-tjener.post("/logg-ut", (forespørsel, svar) => {
+app.post("/logg-ut", (forespørsel, svar) => {
   forespørsel.session.destroy();
   svar.json({ vellykket: true });
 });
 
-// ===== HENT ALLE BRUKERE =====
-tjener.get("/brukere", (forespørsel, svar) => {
+app.get("/brukere", (forespørsel, svar) => {
+  // henter brukere sammen med rolle og klasse
   database.all(`
     SELECT Bruker.id, Bruker.navn, Bruker.email,
       COALESCE(Klasse.navn, 'Ingen klasse') AS klassenavn,
@@ -63,25 +82,23 @@ tjener.get("/brukere", (forespørsel, svar) => {
   });
 });
 
-// ===== HENT EN BRUKER =====
-tjener.get("/brukere/:id", (forespørsel, svar) => {
+app.get("/brukere/:id", (forespørsel, svar) => {
   const id = forespørsel.params.id;
-
   database.get(`
     SELECT Bruker.id, Bruker.navn, Bruker.email, Bruker.rolle_id, Bruker.klasse_id
-    FROM Bruker
-    WHERE Bruker.id = ?
+    FROM Bruker WHERE Bruker.id = ?
   `, [id], (feil, bruker) => {
     svar.json(bruker);
   });
 });
 
-// ===== OPPRETT BRUKER =====
-tjener.post("/brukere", (forespørsel, svar) => {
-  const erAdmin = forespørsel.session.innloggetBruker?.rolle_id === 4;
-  if (!erAdmin) return svar.status(403).json({ feil: "Bare admin kan opprette brukere" });
+app.post("/brukere", (forespørsel, svar) => {
+  // bare admin skal kunne lage nye brukere
+  if (!erAdmin(forespørsel)) return svar.status(403).json({ feil: "Bare admin kan opprette brukere" });
 
   const { navn, email, passord, rolle_id, klasse_id } = forespørsel.body;
+  const feil = validerBruker(forespørsel.body, true);
+  if (feil) return svar.status(400).json({ feil });
 
   database.run(`
     INSERT INTO Bruker (navn, email, passord, rolle_id, klasse_id)
@@ -91,13 +108,14 @@ tjener.post("/brukere", (forespørsel, svar) => {
   });
 });
 
-// ===== OPPDATER BRUKER =====
-tjener.put("/brukere/:id", (forespørsel, svar) => {
-  const erAdmin = forespørsel.session.innloggetBruker?.rolle_id === 4;
-  if (!erAdmin) return svar.status(403).json({ feil: "Bare admin kan redigere brukere" });
+app.put("/brukere/:id", (forespørsel, svar) => {
+  // bare admin skal kunne endre brukere
+  if (!erAdmin(forespørsel)) return svar.status(403).json({ feil: "Bare admin kan redigere brukere" });
 
   const id = forespørsel.params.id;
   const { navn, email, passord, rolle_id, klasse_id } = forespørsel.body;
+  const feil = validerBruker(forespørsel.body, false);
+  if (feil) return svar.status(400).json({ feil });
 
   if (passord) {
     database.run(`
@@ -116,19 +134,16 @@ tjener.put("/brukere/:id", (forespørsel, svar) => {
   }
 });
 
-// ===== SLETT BRUKER =====
-tjener.delete("/brukere/:id", (forespørsel, svar) => {
-  const erAdmin = forespørsel.session.innloggetBruker?.rolle_id === 4;
-  if (!erAdmin) return svar.status(403).json({ feil: "Bare admin kan slette brukere" });
+app.delete("/brukere/:id", (forespørsel, svar) => {
+  // bare admin skal kunne slette brukere
+  if (!erAdmin(forespørsel)) return svar.status(403).json({ feil: "Bare admin kan slette brukere" });
 
   const id = forespørsel.params.id;
-
   database.run("DELETE FROM Bruker WHERE id = ?", [id], () => {
     svar.json({ melding: "Bruker slettet" });
   });
 });
 
-// ===== START TJENER =====
-tjener.listen(3003, () => {
-  console.log("Tjener kjører på http://localhost:3003");
+app.listen(3003, () => {
+  console.log("App kjører på http://localhost:3003");
 });
